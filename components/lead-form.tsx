@@ -17,7 +17,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   employmentFormSchema,
-  payRangeOptions,
   educationLevelOptions
 } from '@/lib/types';
 import { toast } from 'sonner';
@@ -29,7 +28,7 @@ export function LeadForm() {
       name: '',
       email: '',
       phone: '',
-      pay_range: undefined,
+      pay_range: '',
       education_level: undefined,
       certificates: '',
       linkedin: '',
@@ -190,21 +189,17 @@ export function LeadForm() {
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldLabel htmlFor="pay_range">
-                      Desired Pay Range <span className="text-destructive">*</span>
+                      Desired Pay Rate <span className="text-destructive">*</span>
                     </FieldLabel>
-                    <select
+                    <Input
                       {...field}
                       id="pay_range"
                       aria-invalid={fieldState.invalid}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="">Select pay range...</option>
-                      {payRangeOptions.map((range) => (
-                        <option key={range} value={range}>
-                          {range}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="e.g., $60,000/year or $30/hour"
+                    />
+                    <FieldDescription>
+                      Enter your desired salary or hourly rate
+                    </FieldDescription>
                     {fieldState.invalid && (
                       <FieldError errors={[fieldState.error]} />
                     )}

@@ -4,14 +4,6 @@ import { z } from 'zod';
  * Employment Application schema
  */
 
-export const payRangeOptions = [
-  '$40k-$60k',
-  '$60k-$80k',
-  '$80k-$100k',
-  '$100k-$120k',
-  '$120k+'
-] as const;
-
 export const educationLevelOptions = [
   'High School',
   "Associate's",
@@ -30,9 +22,10 @@ export const employmentFormSchema = z.object({
     .string()
     .regex(/^[\d\s\-\+\(\)]+$/, 'Please enter a valid phone number.')
     .min(10, 'Phone number must be at least 10 digits.'),
-  pay_range: z.enum(payRangeOptions, {
-    message: 'Please select a pay range'
-  }),
+  pay_range: z
+    .string()
+    .min(1, 'Please enter your desired pay rate')
+    .max(100, 'Pay rate must be at most 100 characters.'),
   education_level: z.enum(educationLevelOptions, {
     message: 'Please select your education level'
   }),
