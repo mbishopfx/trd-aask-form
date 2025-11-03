@@ -1,6 +1,6 @@
-# AASK Physical Therapy - Employment Application System
+# AASK Rehab & Physical Therapy - Employment Application System
 
-Employment intake form system with AI-powered applicant analysis for AASK Physical Therapy.
+Employment intake form system with AI-powered applicant analysis for AASK Rehab & Physical Therapy.
 
 ## Features
 - Employment application form
