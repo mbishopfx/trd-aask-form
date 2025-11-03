@@ -1,38 +1,81 @@
 import { z } from 'zod';
 
 /**
- * Lead schema
+ * Employment Application schema
  */
 
-export const formSchema = z.object({
-  email: z.email('Please enter a valid email address.'),
+export const payRangeOptions = [
+  '$40k-$60k',
+  '$60k-$80k',
+  '$80k-$100k',
+  '$100k-$120k',
+  '$120k+'
+] as const;
+
+export const educationLevelOptions = [
+  'High School',
+  "Associate's",
+  "Bachelor's",
+  "Master's",
+  'Doctorate'
+] as const;
+
+export const employmentFormSchema = z.object({
   name: z
     .string()
     .min(2, 'Name is required')
-    .max(50, 'Name must be at most 50 characters.'),
+    .max(100, 'Name must be at most 100 characters.'),
+  email: z.string().email('Please enter a valid email address.'),
   phone: z
     .string()
     .regex(/^[\d\s\-\+\(\)]+$/, 'Please enter a valid phone number.')
-    .min(10, 'Phone number must be at least 10 digits.')
+    .min(10, 'Phone number must be at least 10 digits.'),
+  address: z
+    .string()
+    .min(10, 'Please enter your full address')
+    .max(500, 'Address must be at most 500 characters.'),
+  pay_range: z.enum(payRangeOptions, {
+    errorMap: () => ({ message: 'Please select a pay range' })
+  }),
+  education_level: z.enum(educationLevelOptions, {
+    errorMap: () => ({ message: 'Please select your education level' })
+  }),
+  certificates: z
+    .string()
+    .max(1000, 'Certificates must be at most 1000 characters.')
     .optional()
     .or(z.literal('')),
-  company: z.string().optional().or(z.literal('')),
-  message: z
+  linkedin: z
     .string()
-    .min(10, 'Message is required')
-    .max(500, 'Message must be less than 500 characters.')
+    .url('Please enter a valid LinkedIn URL')
+    .optional()
+    .or(z.literal('')),
+  additional_notes: z
+    .string()
+    .max(2000, 'Additional notes must be at most 2000 characters.')
+    .optional()
+    .or(z.literal(''))
 });
 
-export type FormSchema = z.infer<typeof formSchema>;
+export type EmploymentFormSchema = z.infer<typeof employmentFormSchema>;
 
 /**
- * Qualification schema
+ * Job Application (Database schema)
+ */
+export interface JobApplication extends EmploymentFormSchema {
+  id: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Qualification schema for AI analysis
  */
 
 export const qualificationCategorySchema = z.enum([
   'QUALIFIED',
   'UNQUALIFIED',
-  'SUPPORT',
   'FOLLOW_UP'
 ]);
 
@@ -42,3 +85,16 @@ export const qualificationSchema = z.object({
 });
 
 export type QualificationSchema = z.infer<typeof qualificationSchema>;
+
+/**
+ * AI Analysis (Database schema)
+ */
+export interface AIAnalysis {
+  id: string;
+  application_id: string;
+  research_summary: string | null;
+  qualification_category: string | null;
+  qualification_reason: string | null;
+  linkedin_analysis: string | null;
+  analyzed_at: string;
+}

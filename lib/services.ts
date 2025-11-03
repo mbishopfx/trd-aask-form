@@ -1,220 +1,183 @@
+import OpenAI from 'openai';
 import {
-  Experimental_Agent as Agent,
-  stepCountIs,
-  tool,
-  generateObject,
-  generateText
-} from 'ai';
-import {
-  FormSchema,
+  EmploymentFormSchema,
   QualificationSchema,
-  qualificationSchema
+  JobApplication
 } from '@/lib/types';
-import { sendSlackMessageWithButtons } from '@/lib/slack';
-import { z } from 'zod';
-import { exa } from '@/lib/exa';
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 /**
- * Qualify the lead
+ * Research LinkedIn profile if URL is provided
  */
-export async function qualify(
-  lead: FormSchema,
+export async function researchLinkedIn(
+  linkedinUrl: string
+): Promise<string | null> {
+  if (!linkedinUrl) return null;
+
+  try {
+    // Note: In a real implementation, you would use a LinkedIn scraping service
+    // or the LinkedIn API. For now, we'll simulate this with AI analysis.
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You are an HR analyst researching potential candidates. Provide insights based on LinkedIn profile URL.'
+        },
+        {
+          role: 'user',
+          content: `Analyze this LinkedIn profile URL and provide insights about what we might expect from a candidate with this profile: ${linkedinUrl}`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 500
+    });
+
+    return response.choices[0].message.content || 'Unable to analyze LinkedIn profile';
+  } catch (error) {
+    console.error('LinkedIn research error:', error);
+    return 'Unable to research LinkedIn profile at this time';
+  }
+}
+
+/**
+ * Analyze applicant and generate comprehensive assessment
+ */
+export async function analyzeApplicant(
+  application: JobApplication
+): Promise<{
+  research_summary: string;
+  linkedin_analysis: string | null;
+}> {
+  try {
+    // Research LinkedIn if provided
+    const linkedinAnalysis = application.linkedin
+      ? await researchLinkedIn(application.linkedin)
+      : null;
+
+    // Generate comprehensive analysis
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an expert HR analyst for AASK Physical Therapy. Analyze job applications and provide detailed, professional assessments of candidates. Consider education level, certifications, pay expectations, and overall fit for a physical therapy practice.`
+        },
+        {
+          role: 'user',
+          content: `Analyze this job application:
+
+Name: ${application.name}
+Email: ${application.email}
+Phone: ${application.phone}
+Address: ${application.address}
+Education Level: ${application.education_level}
+Desired Pay Range: ${application.pay_range}
+Certifications: ${application.certificates || 'None provided'}
+LinkedIn: ${application.linkedin || 'Not provided'}
+Additional Notes: ${application.additional_notes || 'None'}
+
+${linkedinAnalysis ? `LinkedIn Analysis: ${linkedinAnalysis}` : ''}
+
+Provide a comprehensive analysis covering:
+1. Overall candidate profile and background
+2. Qualifications and certifications assessment
+3. Education level appropriateness for physical therapy roles
+4. Salary expectations evaluation
+5. Potential strengths and areas of concern
+6. Recommendations for next steps
+
+Format your response as a professional HR assessment report.`
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1500
+    });
+
+    return {
+      research_summary:
+        response.choices[0].message.content || 'Unable to generate analysis',
+      linkedin_analysis: linkedinAnalysis
+    };
+  } catch (error) {
+    console.error('Applicant analysis error:', error);
+    throw new Error('Failed to analyze applicant');
+  }
+}
+
+/**
+ * Qualify candidate based on application and research
+ */
+export async function qualifyCandidate(
+  application: JobApplication,
   research: string
 ): Promise<QualificationSchema> {
-  const { object } = await generateObject({
-    model: 'openai/gpt-5',
-    schema: qualificationSchema,
-    prompt: `Qualify the lead and give a reason for the qualification based on the following information: LEAD DATA: ${JSON.stringify(
-      lead
-    )} and RESEARCH: ${research}`
-  });
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an HR qualification system for AASK Physical Therapy. Based on the application and research, determine if the candidate is QUALIFIED, UNQUALIFIED, or needs FOLLOW_UP. Provide a clear, concise reason for your decision.`
+        },
+        {
+          role: 'user',
+          content: `Based on this analysis, qualify the candidate:
 
-  return object;
-}
+Applicant: ${application.name}
+Education: ${application.education_level}
+Pay Range: ${application.pay_range}
+Certifications: ${application.certificates || 'None'}
 
-/**
- * Write an email
- */
-export async function writeEmail(
-  research: string,
-  qualification: QualificationSchema
-) {
-  const { text } = await generateText({
-    model: 'openai/gpt-5',
-    prompt: `Write an email for a ${
-      qualification.category
-    } lead based on the following information: ${JSON.stringify(research)}`
-  });
+Analysis:
+${research}
 
-  return text;
-}
-
-/**
- * Send the research and qualification to the human for approval in slack
- */
-export async function humanFeedback(
-  research: string,
-  email: string,
-  qualification: QualificationSchema
-) {
-  const message = `*New Lead Qualification*\n\n*Email:* ${email}\n*Category:* ${
-    qualification.category
-  }\n*Reason:* ${qualification.reason}\n\n*Research:*\n${research.slice(
-    0,
-    500
-  )}...\n\n*Please review and approve or reject this email*`;
-
-  const slackChannel = process.env.SLACK_CHANNEL_ID || '';
-
-  return await sendSlackMessageWithButtons(slackChannel, message);
-}
-
-/**
- * Send an email
- */
-export async function sendEmail(email: string) {
-  /**
-   * send email using provider like sendgrid, mailgun, resend etc.
-   */
-}
-
-/**
- * ------------------------------------------------------------
- * Agent & Tools
- * ------------------------------------------------------------
- */
-
-/**
- * Fetch tool
- */
-export const fetchUrl = tool({
-  description: 'Return visible text from a public URL as Markdown.',
-  inputSchema: z.object({
-    url: z.string().describe('Absolute URL, including http:// or https://')
-  }),
-  execute: async ({ url }) => {
-    const result = await exa.getContents(url, {
-      text: true
+Respond in JSON format with:
+{
+  "category": "QUALIFIED" | "UNQUALIFIED" | "FOLLOW_UP",
+  "reason": "Brief explanation of your decision"
+}`
+        }
+      ],
+      temperature: 0.5,
+      max_tokens: 300,
+      response_format: { type: 'json_object' }
     });
+
+    const result = JSON.parse(
+      response.choices[0].message.content || '{}'
+    ) as QualificationSchema;
     return result;
+  } catch (error) {
+    console.error('Candidate qualification error:', error);
+    // Default to FOLLOW_UP if there's an error
+    return {
+      category: 'FOLLOW_UP',
+      reason: 'Unable to automatically qualify candidate - manual review needed'
+    };
   }
-});
+}
 
 /**
- * CRM Search tool
+ * Complete AI analysis pipeline
  */
-export const crmSearch = tool({
-  description:
-    'Search existing Vercel CRM for opportunities by company name or domain',
-  inputSchema: z.object({
-    name: z
-      .string()
-      .describe('The name of the company to search for (e.g. "Vercel")')
-  }),
-  execute: async ({ name }) => {
-    // fetch from CRM like Salesforce, Hubspot, or Snowflake, etc.
-    return [];
-  }
-});
+export async function performAIAnalysis(application: JobApplication) {
+  // Step 1: Analyze applicant
+  const { research_summary, linkedin_analysis } = await analyzeApplicant(
+    application
+  );
 
-/**
- * Tech-stack analysis tool
- */
-export const techStackAnalysis = tool({
-  description: 'Return tech stack analysis for a domain.',
-  inputSchema: z.object({
-    domain: z.string().describe('Domain, e.g. "vercel.com"')
-  }),
-  execute: async ({ domain }) => {
-    // fetch the tech stack for the domain
-    return [];
-  }
-});
+  // Step 2: Qualify candidate
+  const qualification = await qualifyCandidate(application, research_summary);
 
-/**
- * Search tool
- */
-const search = tool({
-  description: 'Search the web for information',
-  inputSchema: z.object({
-    keywords: z
-      .string()
-      .describe(
-        'The entity to search for (e.g. "Apple") — do not include any Vercel specific keywords'
-      ),
-    resultCategory: z
-      .enum([
-        'company',
-        'research paper',
-        'news',
-        'pdf',
-        'github',
-        'tweet',
-        'personal site',
-        'linkedin profile',
-        'financial report'
-      ])
-      .describe('The category of the result you are looking for')
-  }),
-  execute: async ({ keywords, resultCategory }) => {
-    /**
-     * Deep research using exa.ai
-     * Return the results in markdown format
-     */
-    const result = await exa.searchAndContents(keywords, {
-      numResults: 2,
-      type: 'keyword',
-      category: resultCategory,
-      summary: true
-    });
-    return result;
-  }
-});
-
-/**
- * Query the knowledge base
- */
-const queryKnowledgeBase = tool({
-  description: 'Query the knowledge base for the given query.',
-  inputSchema: z.object({
-    query: z.string()
-  }),
-  execute: async ({ query }: { query: string }) => {
-    /**
-     * Query the knowledge base for the given query
-     * - ex: pull from turbopuffer, pinecone, postgres, snowflake, etc.
-     * Return the context from the knowledge base
-     */
-    return 'Context from knowledge base for the given query';
-  }
-});
-
-/**
- * Research agent
- *
- * This agent is used to research the lead and return a comprehensive report
- */
-export const researchAgent = new Agent({
-  model: 'openai/gpt-5',
-  system: `
-  You are a researcher to find information about a lead. You are given a lead and you need to find information about the lead.
-  
-  You can use the tools provided to you to find information about the lead: 
-  - search: Searches the web for information
-  - queryKnowledgeBase: Queries the knowledge base for the given query
-  - fetchUrl: Fetches the contents of a public URL
-  - crmSearch: Searches the CRM for the given company name
-  - techStackAnalysis: Analyzes the tech stack of the given domain
-  
-  Synthesize the information you find into a comprehensive report.
-  `,
-  tools: {
-    search,
-    queryKnowledgeBase,
-    fetchUrl,
-    crmSearch,
-    techStackAnalysis
-    // add other tools here
-  },
-  stopWhen: [stepCountIs(20)] // stop after max 20 steps
-});
+  return {
+    research_summary,
+    linkedin_analysis,
+    qualification_category: qualification.category,
+    qualification_reason: qualification.reason
+  };
+}
