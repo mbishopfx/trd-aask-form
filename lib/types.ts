@@ -35,10 +35,10 @@ export const employmentFormSchema = z.object({
     .min(10, 'Please enter your full address')
     .max(500, 'Address must be at most 500 characters.'),
   pay_range: z.enum(payRangeOptions, {
-    errorMap: () => ({ message: 'Please select a pay range' })
+    message: 'Please select a pay range'
   }),
   education_level: z.enum(educationLevelOptions, {
-    errorMap: () => ({ message: 'Please select your education level' })
+    message: 'Please select your education level'
   }),
   certificates: z
     .string()
