@@ -65,7 +65,7 @@ export async function analyzeApplicant(
       messages: [
         {
           role: 'system',
-          content: `You are an expert HR analyst for AASK Physical Therapy. Analyze job applications and provide detailed, professional assessments of candidates. Consider education level, certifications, pay expectations, and overall fit for a physical therapy practice.`
+          content: `You are an expert HR analyst for AASK Rehab & Physical Therapy. Analyze job applications and provide detailed, professional assessments of candidates. Consider education level, certifications, pay expectations, and overall fit for a physical therapy practice.`
         },
         {
           role: 'user',
@@ -74,7 +74,6 @@ export async function analyzeApplicant(
 Name: ${application.name}
 Email: ${application.email}
 Phone: ${application.phone}
-Address: ${application.address}
 Education Level: ${application.education_level}
 Desired Pay Range: ${application.pay_range}
 Certifications: ${application.certificates || 'None provided'}
@@ -122,7 +121,7 @@ export async function qualifyCandidate(
       messages: [
         {
           role: 'system',
-          content: `You are an HR qualification system for AASK Physical Therapy. Based on the application and research, determine if the candidate is QUALIFIED, UNQUALIFIED, or needs FOLLOW_UP. Provide a clear, concise reason for your decision.`
+          content: `You are an HR qualification system for AASK Rehab & Physical Therapy. Based on the application and research, determine if the candidate is QUALIFIED, UNQUALIFIED, or needs FOLLOW_UP. Provide a clear, concise reason for your decision.`
         },
         {
           role: 'user',

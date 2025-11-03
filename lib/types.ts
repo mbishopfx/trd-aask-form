@@ -30,10 +30,6 @@ export const employmentFormSchema = z.object({
     .string()
     .regex(/^[\d\s\-\+\(\)]+$/, 'Please enter a valid phone number.')
     .min(10, 'Phone number must be at least 10 digits.'),
-  address: z
-    .string()
-    .min(10, 'Please enter your full address')
-    .max(500, 'Address must be at most 500 characters.'),
   pay_range: z.enum(payRangeOptions, {
     message: 'Please select a pay range'
   }),

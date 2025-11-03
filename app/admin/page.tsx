@@ -208,7 +208,7 @@ export default function AdminPanel() {
             />
           </div>
           <h1 className="mb-6 text-center text-2xl font-bold">
-            AASK Physical Therapy
+            AASK Rehab & Physical Therapy
           </h1>
           <h2 className="mb-4 text-center text-lg text-gray-600">
             Admin Panel Login
@@ -249,7 +249,7 @@ export default function AdminPanel() {
               className="h-16 w-auto object-contain"
             />
             <div>
-              <h1 className="text-3xl font-bold">AASK Physical Therapy</h1>
+              <h1 className="text-3xl font-bold">AASK Rehab & Physical Therapy</h1>
               <p className="text-gray-600">Employment Applications Admin Panel</p>
             </div>
           </div>
@@ -464,10 +464,6 @@ export default function AdminPanel() {
                     <div>
                       <span className="text-gray-600">Phone:</span>{' '}
                       {selectedApp.phone}
-                    </div>
-                    <div className="col-span-2">
-                      <span className="text-gray-600">Address:</span>{' '}
-                      {selectedApp.address}
                     </div>
                   </div>
                 </div>

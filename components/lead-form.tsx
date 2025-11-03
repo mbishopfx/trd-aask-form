@@ -29,7 +29,6 @@ export function LeadForm() {
       name: '',
       email: '',
       phone: '',
-      address: '',
       pay_range: undefined,
       education_level: undefined,
       certificates: '',
@@ -67,7 +66,7 @@ export function LeadForm() {
             className="h-32 w-auto object-contain"
           />
         </div>
-        <h1 className="text-3xl font-bold">AASK Physical Therapy</h1>
+        <h1 className="text-3xl font-bold">AASK Rehab & Physical Therapy</h1>
         <p className="mt-2 text-lg text-gray-600">Employment Application</p>
       </div>
 
@@ -147,29 +146,6 @@ export function LeadForm() {
                 )}
               />
             </div>
-
-            <Controller
-              name="address"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="address">
-                    Address <span className="text-destructive">*</span>
-                  </FieldLabel>
-                  <Textarea
-                    {...field}
-                    id="address"
-                    aria-invalid={fieldState.invalid}
-                    placeholder="123 Main St, City, State, ZIP"
-                    rows={3}
-                    className="resize-none"
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
           </FieldGroup>
         </FieldSet>
 

@@ -22,7 +22,7 @@ export async function POST(request: Request) {
           name: parsedBody.data.name,
           email: parsedBody.data.email,
           phone: parsedBody.data.phone,
-          address: parsedBody.data.address,
+          address: null,
           pay_range: parsedBody.data.pay_range,
           education_level: parsedBody.data.education_level,
           certificates: parsedBody.data.certificates || null,
