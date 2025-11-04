@@ -31,8 +31,10 @@ export async function POST(request: Request) {
       .from('qr_codes')
       .insert([
         {
+          title: 'AASK Employment Application Form',
           url,
-          qr_code_data: qrCodeData
+          qr_code_data: qrCodeData,
+          page_type: 'employment_form'
         }
       ])
       .select()
