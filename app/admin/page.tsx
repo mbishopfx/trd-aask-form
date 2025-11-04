@@ -80,7 +80,7 @@ export default function AdminPanel() {
       if (response.ok) {
         const data = await response.json();
         if (data.qr_code) {
-          setQrCode(data.qr_code.qr_code_data);
+          setQrCode(data.qr_code.qr_code_data || data.qr_code.qr_code_url);
         }
       }
     } catch (error) {
@@ -104,10 +104,12 @@ export default function AdminPanel() {
 
       if (response.ok) {
         const data = await response.json();
-        setQrCode(data.qr_code.qr_code_data);
+        const qrUrl = data.qr_code.public_url || data.qr_code.qr_code_url || data.qr_code.qr_code_data;
+        setQrCode(qrUrl);
         toast.success('QR code generated successfully');
       } else {
-        toast.error('Failed to generate QR code');
+        const error = await response.json();
+        toast.error(error.message || 'Failed to generate QR code');
       }
     } catch (error) {
       console.error('QR generation error:', error);
